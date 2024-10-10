@@ -1,8 +1,10 @@
+import os
 from configparser import ConfigParser
-import psycopg2
+
+PATH_TO_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "src", "database.ini")
 
 
-def config(filename="database.ini", section="postgresql"):
+def config(filename: str = PATH_TO_FILE, section: str = "postgresql") -> dict[str, str]:
     # Создание парсера
     parser = ConfigParser()
     # Чтение файла конфигурации
