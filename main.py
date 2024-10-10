@@ -1,9 +1,8 @@
 import re
 
-from src.user_interaction import (display_menu_company, display_menu_search, get_menu_choice_company,
-                                  get_menu_choice_search, data_preparation, get_name_company_and_count,
-                                  get_avg_salary, get_vacancy_by_key_word)
-
+from src.user_interaction import (data_preparation, display_menu_company, display_menu_search, get_avg_salary,
+                                  get_menu_choice_company, get_menu_choice_search, get_name_company_and_count,
+                                  get_vacancy_by_key_word)
 
 COMPANY = "а"
 INPUT_COMPANY = "б"

@@ -1,9 +1,9 @@
 import re
 
-from src.vacancy import Vacancy
-from src.company import Company
 from src.api_company import HeadHunterAPICompany
 from src.api_vacancy import HeadHunterAPIVacancy
+from src.company import Company
+from src.vacancy import Vacancy
 
 
 def cast_hh_to_object_list_company(companies: list[dict[str | int]]) -> list[Company]:

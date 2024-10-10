@@ -1,8 +1,8 @@
-from src.create_table import PostgresDB
 from src.config import config
-from src.utils import join_company_vacancy
-from src.insert_data_in_table import InsertTablePostgres
+from src.create_table import PostgresDB
 from src.get_data_from_db import DBManager
+from src.insert_data_in_table import InsertTablePostgres
+from src.utils import join_company_vacancy
 
 
 def display_menu_company() -> None:

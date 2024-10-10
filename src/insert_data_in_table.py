@@ -30,7 +30,7 @@ class InsertTablePostgres:
                     id_company = cur.fetchone()[0]
                     for vac in vacancy:
                         cur.execute("""
-                            INSERT INTO vacancy 
+                            INSERT INTO vacancy
                             (id_company, name_vacancy, area, link, description, requirements, salary_from, salary_to)
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                             """,
