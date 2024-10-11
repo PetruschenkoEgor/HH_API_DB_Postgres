@@ -48,14 +48,19 @@ def get_menu_choice_company() -> str:
 
 def get_menu_choice_search() -> int:
     """ Получает от пользователя пункт меню """
-    choice = int(input("Введите пункт меню: "))
+    choice = input("Введите пункт меню: ")
     print()
 
-    # проверка вводимых данных
-    while choice < 1 or choice > 6:
-        print("Возможные варианты ввода: 1 - 6")
-        choice = int(input("Введите пункт меню: "))
-        print()
+    digits = ["1", "2", "3", "4", "5", "6"]
+    if choice.isdigit() and choice in digits:
+        choice = int(choice)
+    else:
+        while choice not in digits:
+            print("Возможные варианты ввода: 1 - 6")
+            choice = input("Введите пункт меню: ")
+            print()
+
+        choice = int(choice)
 
     return choice
 
