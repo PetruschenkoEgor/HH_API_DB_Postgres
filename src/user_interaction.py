@@ -1,3 +1,5 @@
+from typing import Any
+
 from src.config import config
 from src.create_table import PostgresDB
 from src.get_data_from_db import DBManager
@@ -22,9 +24,11 @@ def display_menu_search() -> None:
     """ Меню главной функции, что искать в таблицах """
     print("-------Меню поиска-------")
     print("1. Названия всех компаний и количество вакансий у каждой компании")
-    print("2. Средняя зарплата по всем вакансиям")
-    print("3. Вакансии по ключевым словам")
-    print("4. Выйти из программы")
+    print("2. Все вакансии с указанием названия компании, названия вакансии, зарплаты и ссылки")
+    print("3. Средняя зарплата по всем вакансиям")
+    print("4. Все вакансии, у которых зарплата выше средней зарплаты по всем вакансиям")
+    print("5. Вакансии по ключевым словам")
+    print("6. Выйти из программы")
     print()
 
 
@@ -48,8 +52,8 @@ def get_menu_choice_search() -> int:
     print()
 
     # проверка вводимых данных
-    while choice < 1 or choice > 4:
-        print("Возможные варианты ввода: 1 - 4")
+    while choice < 1 or choice > 6:
+        print("Возможные варианты ввода: 1 - 6")
         choice = int(input("Введите пункт меню: "))
         print()
 
@@ -81,6 +85,32 @@ def get_name_company_and_count() -> None:
     print()
 
 
+def get_all_vacancy() -> None:
+    """ Все вакансии с указанием названия компании, названия вакансии, зарплаты и ссылки """
+    vacancy = DBManager('hhapi')
+    vacancy = sorted(vacancy.get_all_vacancies(config()), key=lambda x: x.get("salary_to"))
+    vacancy = sorted(vacancy, key=lambda x: x.get("salary_from"))
+
+    for vac in vacancy:
+        name_c = vac.get("name_company")
+        name_v = vac.get("name_vacancy")
+        salary_from = vac.get("salary_from")
+        salary_to = vac.get("salary_to")
+        link = vac.get("link")
+        if salary_from == 0 and salary_to == 0:
+            print(f"Название компании: {name_c}. Название вакансии: {name_v}. Зарплата не указана. Ссылка: {link}.")
+            print()
+        elif salary_from == 0 and salary_to > 0:
+            print(f"Название компании: {name_c}. Название вакансии: {name_v}. Зарплата до {salary_to}. "
+                  f"Ссылка: {link}.")
+            print()
+        else:
+            print(
+                f"Название компании: {name_c}. Название вакансии: {name_v}. Зарплата от {salary_from} до {salary_to}. "
+                f"Ссылка: {link}.")
+            print()
+
+
 def get_avg_salary() -> None:
     """ Средняя зарплата по всем вакансиям """
     avg_salary = DBManager('hhapi')
@@ -89,16 +119,40 @@ def get_avg_salary() -> None:
     print()
 
 
-def get_vacancy_by_key_word(words: list[str]) -> None:
-    """ Получение вакансий по ключевым словам """
-    key_word = DBManager('hhapi')
-    key_word = sorted(key_word.get_vacancies_with_keyword(words, config()), key=lambda tup: tup[7])
-    for vacancy in key_word:
+def get_vacancy(vacancy_list: list[tuple[Any, ...]]) -> None:
+    """ Перебор вакансий из списка словарей """
+    for vacancy in vacancy_list:
         if vacancy[7] == 0 and vacancy[8] == 0:
             print(f"Название вакансии: {vacancy[2]}. Город: {vacancy[3]}. Ссылка: {vacancy[4]}. "
                   f"Зарплата не указана.")
+            print()
+        elif vacancy[7] == 0 and vacancy[8] > 0:
+            print(f"Название вакансии: {vacancy[2]}. Город: {vacancy[3]}. Ссылка: {vacancy[4]}. "
+                  f"Зарплата до {vacancy[8]}.")
             print()
         else:
             print(f"Название вакансии: {vacancy[2]}. Город: {vacancy[3]}. Ссылка: {vacancy[4]}. "
                   f"Зарплата от {vacancy[7]} до {vacancy[8]}.")
             print()
+
+
+def get_vacancy_salary_high_avg() -> None:
+    """ Все вакансии, у которых зарплата выше средней зарплаты по всем вакансиям """
+    high_avg = DBManager('hhapi')
+    high_avg = sorted(high_avg.get_vacancies_with_higher_salary(config()), key=lambda tup: tup[8])
+    high_avg = sorted(high_avg, key=lambda tup: tup[7])
+
+    get_vacancy(high_avg)
+
+
+def get_vacancy_by_key_word(words: list[str]) -> None:
+    """ Получение вакансий по ключевым словам """
+    if words in [[""], [" "]]:
+        print("Вы ввели пустой запрос, переход в меню")
+        print()
+    else:
+        key_word = DBManager('hhapi')
+        key_word = sorted(key_word.get_vacancies_with_keyword(words, config()), key=lambda tup: tup[8])
+        key_word = sorted(key_word, key=lambda tup: tup[7])
+
+        get_vacancy(key_word)

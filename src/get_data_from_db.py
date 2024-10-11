@@ -71,15 +71,17 @@ class DBManager:
                 conn.close()
 
     def get_avg_salary(self, params: dict[str, str]) -> int | None:
-        """ Получает среднюю максимальную зарплату по вакансиям """
+        """ Получает среднюю зарплату по вакансиям """
         conn = None
         try:
             conn = psycopg2.connect(dbname=self.__db_name, **params)
             with conn.cursor() as cur:
+                cur.execute("SELECT ROUND(AVG(salary_from)) FROM vacancy")
+                records_from = cur.fetchone()[0]
                 cur.execute("SELECT ROUND(AVG(salary_to)) FROM vacancy")
-                records = cur.fetchone()
+                records_to = cur.fetchone()[0]
 
-                return records[0]
+                return round(((records_from + records_to) / 2))
 
         except psycopg2.Error as error:
             print(f"Ошибка БД:{error}")
@@ -91,18 +93,19 @@ class DBManager:
             if conn is not None:
                 conn.close()
 
-    def get_vacancies_with_higher_salary(self, params: dict[str, str]) -> list[dict[Any, tuple[Any, ...]]] | None:
+    def get_vacancies_with_higher_salary(self, params: dict[str, str]) -> list[tuple[Any, ...]]:
         """ Получает список всех вакансий, у которых зарплата выше средней максимальной зарплаты по всем вакансиям """
         conn = None
         try:
+            avg_salary = self.get_avg_salary(params)
             conn = psycopg2.connect(dbname=self.__db_name, **params)
             with conn.cursor() as cur:
-                cur.execute("SELECT * FROM vacancy WHERE salary_to > (SELECT AVG(salary_to) FROM vacancy)")
+                cur.execute("SELECT * FROM vacancy WHERE salary_from > %(avg_salary)s",
+                            {"avg_salary": avg_salary})
                 records = cur.fetchall()
                 result = []
                 for row in records:
-                    dict_result = {row[2]: row}
-                    result.append(dict_result)
+                    result.append(row)
 
                 return result
 
@@ -131,7 +134,6 @@ class DBManager:
                                 {'word': '%{}%'.format(word)})
                     records = cur.fetchall()
                     for row in records:
-                        # dict_result = {row[2]: row}
                         result.append(row)
 
                 return result
