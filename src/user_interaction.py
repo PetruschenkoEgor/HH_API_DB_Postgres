@@ -1,6 +1,6 @@
 from typing import Any
 
-from src.config import config
+from config.config import config
 from src.create_table import PostgresDB
 from src.get_data_from_db import DBManager
 from src.insert_data_in_table import InsertTablePostgres

@@ -1,7 +1,7 @@
 import os
 from configparser import ConfigParser
 
-PATH_TO_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "src", "database.ini")
+PATH_TO_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config", "database.ini")
 
 
 def config(filename: str = PATH_TO_FILE, section: str = "postgresql") -> dict[str, str]:
