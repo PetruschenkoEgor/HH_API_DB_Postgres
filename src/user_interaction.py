@@ -1,3 +1,4 @@
+import re
 from typing import Any
 
 from config.config import config
@@ -7,13 +8,34 @@ from src.insert_data_in_table import InsertTablePostgres
 from src.utils import join_company_vacancy
 
 
-def display_menu_company() -> None:
-    """ Меню главной функции, выбор компаний """
+def enter_name_of_bd() -> str:
+    """ Ввод названия БД """
     print("Привет! Эта программа показывает информацию о 10 компаниях с сайта HeadHunter, которые я подобрал! "
           "Или ты можешь вписать свои компании!")
-    print("Так как это учебный проект, для удобства глубина поиска ограничена 100 "
-          "вакансиями для каждой компании. ")
     print()
+    name_bd = input("Введите название Базы Данных(английскими буквами, без лишних символов, можно с пробелами, пример: "
+                    "hh_vacancy): ")
+    print()
+    # заменяем все символы в строке на '_'
+    name_bd = name_bd.translate(str.maketrans({' ': '_', '.': '_', '&': '_', '<': '_', '>': '_', '?': '_', ',': '_'}))
+    # проверяем, чтоб первый символ был буквой, если нет, то заменяем его на bd
+    if not name_bd[0].isalpha():
+        name_bd = name_bd.replace(name_bd[0], "bd")
+    print(f"Название вашей Базы Данных: {name_bd}")
+    print()
+
+    return name_bd
+
+
+# def enter_count_vacancy() -> int:
+#     """ Ввод количества вакансий на одну компанию """
+#     count_vacancy = int(input("Введите максимальное количество вакансий на одну компанию"
+#                               "(о таком количестве вакансий на каждую компанию вы получите информацию): "))
+#     count_vacancy = count_vacancy / 10
+
+
+def display_menu_company() -> None:
+    """ Меню главной функции, выбор компаний """
     print("-------Меню выбора компаний-------")
     print("А. Поиск вакансий, 10-ти предложенных компаний")
     print("Б. Ввести свои компании для поиска вакансий")
@@ -65,24 +87,24 @@ def get_menu_choice_search() -> int:
     return choice
 
 
-def data_preparation(words: list[str]) -> None:
+def data_preparation(words: list[str], name_db: str) -> None:
     """ Создание таблиц и заполнение БД """
     # получение компаний и вакансий
     company_vacancy = join_company_vacancy(words)
 
     # создание БД и таблиц
-    data_base = PostgresDB('hhapi')
+    data_base = PostgresDB(name_db)
     data_base.create_db(config())
     data_base.create_table(config())
 
     # заполнение таблиц данными
-    insertion = InsertTablePostgres('hhapi', company_vacancy)
+    insertion = InsertTablePostgres(name_db, company_vacancy)
     insertion.insert_table_company_and_vacancy(config())
 
 
-def get_name_company_and_count() -> None:
+def get_name_company_and_count(name_db: str) -> None:
     """ Получает названия всех компаний и количество вакансий у каждой компании """
-    name = DBManager('hhapi')
+    name = DBManager(name_db)
     name = name.get_companies_and_vacancies_count(config())
     for company in name:
         for key, value in company.items():
@@ -90,9 +112,9 @@ def get_name_company_and_count() -> None:
     print()
 
 
-def get_all_vacancy() -> None:
+def get_all_vacancy(name_db: str) -> None:
     """ Все вакансии с указанием названия компании, названия вакансии, зарплаты и ссылки """
-    vacancy = DBManager('hhapi')
+    vacancy = DBManager(name_db)
     vacancy = sorted(vacancy.get_all_vacancies(config()), key=lambda x: x.get("salary_to"))
     vacancy = sorted(vacancy, key=lambda x: x.get("salary_from"))
 
@@ -116,9 +138,9 @@ def get_all_vacancy() -> None:
             print()
 
 
-def get_avg_salary() -> None:
+def get_avg_salary(name_db) -> None:
     """ Средняя зарплата по всем вакансиям """
-    avg_salary = DBManager('hhapi')
+    avg_salary = DBManager(name_db)
     avg_salary = avg_salary.get_avg_salary(config())
     print(f"Средняя зарплата по вакансиям: {avg_salary} рублей")
     print()
@@ -141,23 +163,27 @@ def get_vacancy(vacancy_list: list[tuple[Any, ...]]) -> None:
             print()
 
 
-def get_vacancy_salary_high_avg() -> None:
+def get_vacancy_salary_high_avg(name_db) -> None:
     """ Все вакансии, у которых зарплата выше средней зарплаты по всем вакансиям """
-    high_avg = DBManager('hhapi')
+    high_avg = DBManager(name_db)
     high_avg = sorted(high_avg.get_vacancies_with_higher_salary(config()), key=lambda tup: tup[8])
     high_avg = sorted(high_avg, key=lambda tup: tup[7])
 
     get_vacancy(high_avg)
 
 
-def get_vacancy_by_key_word(words: list[str]) -> None:
+def get_vacancy_by_key_word(words: list[str], name_db) -> None:
     """ Получение вакансий по ключевым словам """
     if words in [[""], [" "]]:
         print("Вы ввели пустой запрос, переход в меню")
         print()
     else:
-        key_word = DBManager('hhapi')
+        key_word = DBManager(name_db)
         key_word = sorted(key_word.get_vacancies_with_keyword(words, config()), key=lambda tup: tup[8])
         key_word = sorted(key_word, key=lambda tup: tup[7])
 
         get_vacancy(key_word)
+
+
+if __name__ == '__main__':
+    print(enter_name_of_bd())

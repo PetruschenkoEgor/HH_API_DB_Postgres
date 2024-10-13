@@ -2,7 +2,8 @@ import re
 
 from src.user_interaction import (data_preparation, display_menu_company, display_menu_search, get_all_vacancy,
                                   get_avg_salary, get_menu_choice_company, get_menu_choice_search,
-                                  get_name_company_and_count, get_vacancy_by_key_word, get_vacancy_salary_high_avg)
+                                  get_name_company_and_count, get_vacancy_by_key_word, get_vacancy_salary_high_avg,
+                                  enter_name_of_bd)
 
 COMPANY = "а"
 INPUT_COMPANY = "б"
@@ -19,6 +20,9 @@ def main():
     """ Главная функция """
     choice = 0
     word_list = []
+
+    name_db = enter_name_of_bd()
+
     while choice != EXIT_C:
         display_menu_company()
         choice = get_menu_choice_company()
@@ -39,24 +43,24 @@ def main():
     print("Загрузка данных...")
     print()
 
-    data_preparation(word_list)
+    data_preparation(word_list, name_db)
 
     while choice != EXIT_S:
         display_menu_search()
         choice = get_menu_choice_search()
 
         if choice == 1:
-            get_name_company_and_count()
+            get_name_company_and_count(name_db)
         elif choice == 2:
-            get_all_vacancy()
+            get_all_vacancy(name_db)
         elif choice == 3:
-            get_avg_salary()
+            get_avg_salary(name_db)
         elif choice == 4:
-            get_vacancy_salary_high_avg()
+            get_vacancy_salary_high_avg(name_db)
         elif choice == 5:
             words = re.split(", |,", (input("Введите ключевые слова через запятую для поиска вакансий: ")))
             print()
-            get_vacancy_by_key_word(words)
+            get_vacancy_by_key_word(words, name_db)
 
 
 if __name__ == '__main__':
