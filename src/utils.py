@@ -76,7 +76,7 @@ def cast_hh_to_object_list_vacancy(vacancies: list[dict[str | int]]) -> list[Vac
     return vacancies_list
 
 
-def join_company_vacancy(companies: list[str]) -> list[dict[str, Company | list[Vacancy]]]:
+def join_company_vacancy(companies: list[str], count_vacancy: int) -> list[dict[str, Company | list[Vacancy]]]:
     """ Создает словарь, где ключ - компания, значение - список ее вакансий """
     company_vacancy = []
 
@@ -93,7 +93,7 @@ def join_company_vacancy(companies: list[str]) -> list[dict[str, Company | list[
             # Ссылка на вакансии компании
             url_vacancies = comp.vacancies_url
             # Создаем экземпляр класса HeadHunterAPIVacancy
-            vac = HeadHunterAPIVacancy(url_vacancies)
+            vac = HeadHunterAPIVacancy(url_vacancies, count_vacancy)
             # Получаем json с вакансиями
             vac = vac.get_vacancies()
             # Список экземпляров класса Vacancy

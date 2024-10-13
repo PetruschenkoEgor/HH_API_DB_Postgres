@@ -7,14 +7,24 @@ from src.get_data_from_db import DBManager
 from src.insert_data_in_table import InsertTablePostgres
 from src.utils import join_company_vacancy
 
+COMPANY = "а"
+INPUT_COMPANY = "б"
+EXIT_C = "в"
+NAME_COUNT = 1
+VACANCY = 2
+SALARY_AVG = 3
+HIGH_AVG = 4
+KEY_WORD = 5
+EXIT_S = 6
+
 
 def enter_name_of_bd() -> str:
     """ Ввод названия БД """
-    print("Привет! Эта программа показывает информацию о 10 компаниях с сайта HeadHunter, которые я подобрал! "
-          "Или ты можешь вписать свои компании!")
+    print("Привет! Эта программа показывает информацию о компаниях и их вакансиях с сайта HeadHunter! "
+          "Вы можете ввести свои компании для поиска или воспользоваться предложенной подборкой компаний!")
     print()
-    name_bd = input("Введите название Базы Данных(английскими буквами, без лишних символов, можно с пробелами, пример: "
-                    "hh_vacancy): ")
+    name_bd = input("Введите название Базы Данных(английскими буквами, без лишних символов, можно с пробелами, "
+                    "пример: hh_vacancy): ")
     print()
     # заменяем все символы в строке на '_'
     name_bd = name_bd.translate(str.maketrans({' ': '_', '.': '_', '&': '_', '<': '_', '>': '_', '?': '_', ',': '_'}))
@@ -27,11 +37,26 @@ def enter_name_of_bd() -> str:
     return name_bd
 
 
-# def enter_count_vacancy() -> int:
-#     """ Ввод количества вакансий на одну компанию """
-#     count_vacancy = int(input("Введите максимальное количество вакансий на одну компанию"
-#                               "(о таком количестве вакансий на каждую компанию вы получите информацию): "))
-#     count_vacancy = count_vacancy / 10
+def enter_count_vacancy() -> int:
+    """ Ввод количества вакансий на одну компанию """
+    count_vacancy = input("Введите максимальное количество вакансий на одну компанию - число от 1 до 5000(о таком "
+                          "количестве вакансий на каждую компанию вы получите информацию): ")
+    print()
+
+    while not count_vacancy.isdigit():
+        print("Вводить можно числа от 1 до 5000!")
+        count_vacancy = input("Введите максимальное количество вакансий на одну компанию(о таком количестве вакансий "
+                              "на каждую компанию вы получите информацию): ")
+        print()
+
+    count_vacancy = int(count_vacancy)
+
+    if count_vacancy > 5000:
+        count_vacancy = 5000
+    elif count_vacancy < 1:
+        count_vacancy = 1
+
+    return count_vacancy
 
 
 def display_menu_company() -> None:
@@ -87,19 +112,74 @@ def get_menu_choice_search() -> int:
     return choice
 
 
-def data_preparation(words: list[str], name_db: str) -> None:
+def choice_company() -> list[str]:
+    """ Выбор: предложенные компании или ввести свои """
+    choice = 0
+    word_list = []
+    while choice != EXIT_C:
+        display_menu_company()
+        choice = get_menu_choice_company()
+
+        if choice == COMPANY:
+            word_list = ["газпром нефть", "ibs", "inlyit", "т-банк", "крафттек", "Кадровое Агентство Averina.agency",
+                         "unilever", "DNS Технологии", "тензор", "согаз"]
+            choice = EXIT_C
+        elif choice == INPUT_COMPANY:
+            word_list = re.split(", |,", (input("Введите названия компаний через запятую для поиска: ")))
+            print()
+            if word_list in [[""], [" "]]:
+                print("Вы ввели пустой запрос. Введите компании или выберите готовую подборку")
+                print()
+            else:
+                choice = EXIT_C
+
+    print("Загрузка данных...")
+    print()
+
+    return word_list
+
+
+def choice_action(name_db: str) -> None:
+    """ Выбор действия с БД """
+    choice = 0
+    while choice != EXIT_S:
+        display_menu_search()
+        choice = get_menu_choice_search()
+
+        if choice == 1:
+            get_name_company_and_count(name_db)
+        elif choice == 2:
+            get_all_vacancy(name_db)
+        elif choice == 3:
+            get_avg_salary(name_db)
+        elif choice == 4:
+            get_vacancy_salary_high_avg(name_db)
+        elif choice == 5:
+            words = re.split(", |,", (input("Введите ключевые слова через запятую для поиска вакансий: ")))
+            print()
+            get_vacancy_by_key_word(words, name_db)
+
+
+def data_preparation(words: list[str], name_db: str, count_vacancy: int) -> None | str:
     """ Создание таблиц и заполнение БД """
     # получение компаний и вакансий
-    company_vacancy = join_company_vacancy(words)
+    company_vacancy = join_company_vacancy(words, count_vacancy)
+    if len(company_vacancy) < 1:
+        print("По вашему запросу ничего не нашлось! Попробуйте ввести другие компании или выбрать предложенную "
+              "подборку компаний!")
+        print()
+        # choice_company()
+    else:
+        # создание БД и таблиц
+        data_base = PostgresDB(name_db)
+        data_base.create_db(config())
+        data_base.create_table(config())
 
-    # создание БД и таблиц
-    data_base = PostgresDB(name_db)
-    data_base.create_db(config())
-    data_base.create_table(config())
+        # заполнение таблиц данными
+        insertion = InsertTablePostgres(name_db, company_vacancy)
+        insertion.insert_table_company_and_vacancy(config())
 
-    # заполнение таблиц данными
-    insertion = InsertTablePostgres(name_db, company_vacancy)
-    insertion.insert_table_company_and_vacancy(config())
+        return "ok"
 
 
 def get_name_company_and_count(name_db: str) -> None:
@@ -183,7 +263,3 @@ def get_vacancy_by_key_word(words: list[str], name_db) -> None:
         key_word = sorted(key_word, key=lambda tup: tup[7])
 
         get_vacancy(key_word)
-
-
-if __name__ == '__main__':
-    print(enter_name_of_bd())
