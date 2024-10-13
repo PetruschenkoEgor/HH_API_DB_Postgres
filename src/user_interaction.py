@@ -69,7 +69,7 @@ def display_menu_company() -> None:
 
 def display_menu_search() -> None:
     """ Меню главной функции, что искать в таблицах """
-    print("-------Меню поиска-------")
+    print("-------Меню выбора операции-------")
     print("1. Названия всех компаний и количество вакансий у каждой компании")
     print("2. Все вакансии с указанием названия компании, названия вакансии, зарплаты и ссылки")
     print("3. Средняя зарплата по всем вакансиям")
@@ -262,4 +262,8 @@ def get_vacancy_by_key_word(words: list[str], name_db) -> None:
         key_word = sorted(key_word.get_vacancies_with_keyword(words, config()), key=lambda tup: tup[8])
         key_word = sorted(key_word, key=lambda tup: tup[7])
 
-        get_vacancy(key_word)
+        if len(key_word) < 1:
+            print("По вашему запросу ничего не нашлось! Попробуйте ввести другие ключевые слова!")
+            print()
+        else:
+            get_vacancy(key_word)
